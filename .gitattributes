@@ -1,0 +1,4 @@
+# power_query_clean.m is Power Query M code, not Wolfram Language/Mathematica
+# (GitHub's linguist guesses language from the .m extension, which is
+# ambiguous between MATLAB, Objective-C, and Mathematica).
+powerbi/power_query_clean.m linguist-detectable=false
