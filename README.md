@@ -111,17 +111,6 @@ python3 04_run_queries.py
    (courier partners, last-mile logistics) rather than by country, since
    country-level performance is already converging.
 
-## Recreating this in Power BI
-
-The CSVs in `output/` (or a live ODBC connection to `ecommerce.db`) map
-directly onto standard Power BI visuals:
-- Revenue/orders by country → map or bar chart, `country` field
-- Monthly trend → line chart, `order_month` on axis
-- Category mix → stacked bar or treemap
-- Delivery performance table → matrix visual
-- A single Power BI dashboard replicating the CSV-backed dashboard above
-  takes about 20–30 minutes once the queries are run, since all the
-  aggregation already happened in SQL.
 
 ## Limitations
 
