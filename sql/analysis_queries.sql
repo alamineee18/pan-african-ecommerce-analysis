@@ -146,3 +146,55 @@ SELECT
 FROM orders
 WHERE delivery_status != 'Cancelled'
 GROUP BY is_weekend;
+
+-- ============================================================
+-- Added for the interactive country-filter dashboard
+-- ============================================================
+
+-- 13. Monthly revenue trend by country (feeds the country filter)
+SELECT
+    country,
+    order_month,
+    COUNT(*) AS orders,
+    ROUND(SUM(net_amount_usd), 2) AS revenue_usd
+FROM orders
+WHERE delivery_status != 'Cancelled'
+GROUP BY country, order_month
+ORDER BY country, order_month;
+
+
+-- 14. Category revenue by country (feeds the country filter)
+SELECT
+    country,
+    category,
+    COUNT(*) AS orders,
+    ROUND(SUM(net_amount_usd), 2) AS revenue_usd
+FROM orders
+WHERE delivery_status != 'Cancelled'
+GROUP BY country, category
+ORDER BY country, revenue_usd DESC;
+
+
+-- 15. Payment method mix by country (feeds the country filter)
+SELECT
+    country,
+    payment_method,
+    COUNT(*) AS orders
+FROM orders
+GROUP BY country, payment_method
+ORDER BY country, orders DESC;
+
+
+-- 16. Repeat purchase rate by country (feeds the country filter)
+WITH order_counts AS (
+    SELECT country, customer_id, COUNT(*) AS n_orders
+    FROM orders
+    GROUP BY country, customer_id
+)
+SELECT
+    country,
+    COUNT(*) AS total_customers,
+    SUM(CASE WHEN n_orders >= 2 THEN 1 ELSE 0 END) AS repeat_customers,
+    ROUND(100.0 * SUM(CASE WHEN n_orders >= 2 THEN 1 ELSE 0 END) / COUNT(*), 1) AS repeat_rate_pct
+FROM order_counts
+GROUP BY country;

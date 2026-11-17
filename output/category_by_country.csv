@@ -1,0 +1,49 @@
+country,category,orders,revenue_usd
+Egypt,Phones & Tablets,537,314024.5
+Egypt,Electronics,328,136364.35
+Egypt,Fashion,516,42304.38
+Egypt,Home & Living,244,39661.31
+Egypt,Beauty & Personal Care,367,14898.88
+Egypt,Sporting Goods,107,10150.43
+Egypt,Baby Products,120,6753.79
+Egypt,Groceries & FMCG,179,4783.46
+Ghana,Phones & Tablets,388,234590.87
+Ghana,Electronics,249,95001.28
+Ghana,Home & Living,186,29909.14
+Ghana,Fashion,358,29109.88
+Ghana,Beauty & Personal Care,284,11572.86
+Ghana,Sporting Goods,71,6628.41
+Ghana,Baby Products,98,4889.64
+Ghana,Groceries & FMCG,115,3141.98
+Kenya,Phones & Tablets,692,414434.89
+Kenya,Electronics,420,166251.76
+Kenya,Home & Living,291,44593.35
+Kenya,Fashion,570,44415.51
+Kenya,Beauty & Personal Care,488,19958.97
+Kenya,Sporting Goods,159,14782.95
+Kenya,Baby Products,132,7169.4
+Kenya,Groceries & FMCG,223,6090.41
+Morocco,Phones & Tablets,330,212986.83
+Morocco,Electronics,226,82592.69
+Morocco,Fashion,293,23998.3
+Morocco,Home & Living,134,23406.32
+Morocco,Beauty & Personal Care,259,10577.13
+Morocco,Sporting Goods,72,7051.07
+Morocco,Baby Products,75,3736.58
+Morocco,Groceries & FMCG,138,3571.0
+Nigeria,Phones & Tablets,1144,705738.7
+Nigeria,Electronics,759,298554.9
+Nigeria,Home & Living,527,85333.06
+Nigeria,Fashion,1056,81745.92
+Nigeria,Beauty & Personal Care,821,33232.2
+Nigeria,Sporting Goods,247,24923.84
+Nigeria,Baby Products,274,14748.94
+Nigeria,Groceries & FMCG,426,11775.62
+Uganda,Phones & Tablets,328,205416.88
+Uganda,Electronics,192,80322.38
+Uganda,Fashion,301,24557.21
+Uganda,Home & Living,149,24399.52
+Uganda,Beauty & Personal Care,252,10231.39
+Uganda,Sporting Goods,83,7271.73
+Uganda,Baby Products,68,3480.51
+Uganda,Groceries & FMCG,127,3209.14

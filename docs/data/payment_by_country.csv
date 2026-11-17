@@ -1,0 +1,31 @@
+country,payment_method,orders
+Egypt,Mobile Money,1137
+Egypt,Cash on Delivery,891
+Egypt,Card,537
+Egypt,Bank Transfer,200
+Egypt,Unknown,23
+Ghana,Mobile Money,850
+Ghana,Cash on Delivery,659
+Ghana,Card,378
+Ghana,Bank Transfer,134
+Ghana,Unknown,25
+Kenya,Mobile Money,1436
+Kenya,Cash on Delivery,1102
+Kenya,Card,599
+Kenya,Bank Transfer,263
+Kenya,Unknown,39
+Morocco,Mobile Money,724
+Morocco,Cash on Delivery,568
+Morocco,Card,323
+Morocco,Bank Transfer,155
+Morocco,Unknown,21
+Nigeria,Mobile Money,2548
+Nigeria,Cash on Delivery,2066
+Nigeria,Card,1089
+Nigeria,Bank Transfer,420
+Nigeria,Unknown,57
+Uganda,Mobile Money,712
+Uganda,Cash on Delivery,584
+Uganda,Card,300
+Uganda,Bank Transfer,137
+Uganda,Unknown,17
