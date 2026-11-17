@@ -1,335 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pan-African E-Commerce Performance Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
-<style>
-  :root {
-    --fg: #1a1a1a; --fg-muted: #6b6b6b; --bg: #f7f7f5; --panel: #ffffff;
-    --border: #e3e2de; --accent: #c15f3c; --muted-bar: #d8c3ba; --ok: #2f7a4f;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 0; background: var(--bg); color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 60px; }
-  h1 { font-weight: 600; font-size: 28px; margin: 0 0 6px; }
-  .sub { color: var(--fg-muted); font-size: 15px; margin: 0 0 20px; }
-  .links { margin-bottom: 20px; font-size: 14px; }
-  .links a { color: var(--accent); text-decoration: none; margin-right: 16px; }
-  .links a:hover { text-decoration: underline; }
-  .filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
-  .filter-row label { font-size: 13.5px; color: var(--fg-muted); }
-  select#country-filter {
-    font-size: 14px; padding: 7px 30px 7px 12px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--panel); color: var(--fg); cursor: pointer;
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236b6b6b'/></svg>");
-    background-repeat: no-repeat; background-position: right 12px center;
-  }
-  select#country-filter:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px; }
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-  .card .label { font-size: 12.5px; color: var(--fg-muted); margin-bottom: 6px; }
-  .card .value { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .section-title { font-size: 19px; font-weight: 600; margin: 30px 0 12px; }
-  .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; position: relative; }
-  .chart-card h3 { font-size: 14.5px; font-weight: 600; margin: 0 0 12px; color: #333; }
-  .chart-box { width: 100%; }
-  .chart-empty { color: var(--fg-muted); font-size: 13.5px; padding: 20px 0; }
-  .tooltip { position: absolute; background: #222; color: #fff; font-size: 12.5px; padding: 6px 10px; border-radius: 6px; pointer-events: none; opacity: 0; transition: opacity .1s; z-index: 10; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
-  th { color: var(--fg-muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .02em; }
-  tr.selected-row td { background: #fbf1ec; font-weight: 600; }
-  .table-wrap { overflow-x: auto; }
-  .axis text { fill: var(--fg-muted); font-size: 11.5px; }
-  .axis path, .axis line { stroke: #ccc; }
-  .grid line { stroke: #ececea; }
-  .note { color: var(--fg-muted); font-size: 13px; margin-top: 30px; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 18px; }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>Pan-African E-Commerce Performance</h1>
-  <p class="sub" id="headline">Loading…</p>
-  <div class="links">
-    <a href="https://github.com/alamineee18/pan-african-ecommerce-analysis" target="_blank">GitHub repo (SQL + Python + Power BI)</a>
-  </div>
-  <div class="filter-row">
-    <label for="country-filter">Country</label>
-    <select id="country-filter"><option value="All">All countries</option></select>
-  </div>
-
-  <div class="tiles">
-    <div class="card"><div class="label">Total revenue</div><div class="value" id="kpi-revenue">—</div></div>
-    <div class="card"><div class="label">Total orders</div><div class="value" id="kpi-orders">—</div></div>
-    <div class="card"><div class="label">Avg order value</div><div class="value" id="kpi-aov">—</div></div>
-    <div class="card"><div class="label">Repeat purchase rate</div><div class="value" id="kpi-repeat">—</div></div>
-  </div>
-
-  <div class="section-title">Monthly revenue trend — 2025</div>
-  <div class="chart-card">
-    <h3>Revenue by month (USD)</h3>
-    <div class="chart-box" id="chart-trend" style="height:260px"></div>
-  </div>
-
-  <div class="section-title">Where the revenue comes from</div>
-  <div class="chart-card">
-    <h3>Revenue by country (USD)</h3>
-    <div class="chart-box" id="chart-country" style="height:260px"></div>
-  </div>
-  <div class="chart-card">
-    <h3>Revenue by category (USD)</h3>
-    <div class="chart-box" id="chart-category" style="height:280px"></div>
-  </div>
-
-  <div class="section-title">Operations</div>
-  <div class="chart-card">
-    <h3>Delivery performance by country</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Country</th><th>Orders</th><th>Avg delivery (days)</th><th>% late</th><th>% cancelled</th><th>% returned</th></tr></thead>
-        <tbody id="table-delivery"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="chart-card">
-    <h3>Payment method mix (% of orders)</h3>
-    <div class="chart-box" id="chart-payment" style="height:220px"></div>
-  </div>
-
-  <p class="note">
-    This dashboard runs on a simulated dataset (18,180 synthetic orders modeled on reported pan-African
-    e-commerce patterns — country mix, category mix, payment mix — see the
-    <a href="https://github.com/alamineee18/pan-african-ecommerce-analysis" target="_blank">GitHub repo</a>
-    for the full data-generation and cleaning methodology). It is not real transactional data from any company.
-    Built as a data-analyst portfolio project demonstrating SQL, Python, and dashboard/BI skills.
-  </p>
-</div>
-
-<script>
-const fmtUSD = n => '$' + d3.format(',.0f')(n);
-const fmtNum = n => d3.format(',')(Math.round(n));
-const accent = '#c15f3c';
-const mutedBar = '#d8c3ba';
-
-function tooltipFor(container) {
-  const tt = document.createElement('div');
-  tt.className = 'tooltip';
-  container.style.position = 'relative';
-  container.appendChild(tt);
-  return tt;
-}
-
-function emptyMsg(el, msg) {
-  el.innerHTML = `<div class="chart-empty">${msg}</div>`;
-}
-
-// Vertical bar chart. `colorFn(d)` lets callers highlight one bar (e.g. the
-// selected country) while the rest stay muted.
-function barChart(el, rows, xField, yField, fmt, colorFn) {
-  el.innerHTML = '';
-  if (!rows.length) return emptyMsg(el, 'No data for this selection.');
-  const width = el.clientWidth || 600, height = el.clientHeight || 260;
-  const margin = { top: 10, right: 10, bottom: 50, left: 60 };
-  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height)
-    .attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img')
-    .attr('aria-label', `Bar chart of ${yField} by ${xField}`);
-  const x = d3.scaleBand().domain(rows.map(d => d[xField])).range([margin.left, width - margin.right]).padding(0.3);
-  const y = d3.scaleLinear().domain([0, d3.max(rows, d => +d[yField])]).nice().range([height - margin.bottom, margin.top]);
-
-  svg.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(5)).join('line')
-    .attr('x1', margin.left).attr('x2', width - margin.right).attr('y1', d => y(d)).attr('y2', d => y(d));
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0));
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('~s')));
-
-  const tooltip = tooltipFor(el);
-  svg.selectAll('rect').data(rows).join('rect')
-    .attr('x', d => x(d[xField])).attr('y', d => y(+d[yField]))
-    .attr('width', x.bandwidth()).attr('height', d => y(0) - y(+d[yField]))
-    .attr('fill', d => colorFn ? colorFn(d) : accent)
-    .on('mousemove', (ev, d) => {
-      tooltip.style.opacity = 1;
-      tooltip.textContent = `${d[xField]}: ${fmt(+d[yField])}`;
-      const rect = el.getBoundingClientRect();
-      tooltip.style.left = (ev.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (ev.clientY - rect.top - 10) + 'px';
-    })
-    .on('mouseleave', () => tooltip.style.opacity = 0);
-}
-
-function hBarChart(el, rows, labelField, valField, fmt) {
-  el.innerHTML = '';
-  if (!rows.length) return emptyMsg(el, 'No data for this selection.');
-  const width = el.clientWidth || 600, rowH = 32;
-  const margin = { top: 10, right: 50, bottom: 10, left: 150 };
-  const height = rows.length * rowH + margin.top + margin.bottom;
-  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height)
-    .attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img')
-    .attr('aria-label', `Bar chart of ${valField} by ${labelField}`);
-  const y = d3.scaleBand().domain(rows.map(d => d[labelField])).range([margin.top, height - margin.bottom]).padding(0.25);
-  const x = d3.scaleLinear().domain([0, d3.max(rows, d => +d[valField])]).nice().range([margin.left, width - margin.right]);
-
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).tickSizeOuter(0));
-
-  const tooltip = tooltipFor(el);
-  svg.selectAll('rect').data(rows).join('rect')
-    .attr('y', d => y(d[labelField])).attr('x', margin.left)
-    .attr('height', y.bandwidth()).attr('width', d => Math.max(0, x(+d[valField]) - margin.left))
-    .attr('fill', accent)
-    .on('mousemove', (ev, d) => {
-      tooltip.style.opacity = 1;
-      tooltip.textContent = `${d[labelField]}: ${fmt(+d[valField])}`;
-      const rect = el.getBoundingClientRect();
-      tooltip.style.left = (ev.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (ev.clientY - rect.top - 10) + 'px';
-    })
-    .on('mouseleave', () => tooltip.style.opacity = 0);
-
-  svg.selectAll('text.val').data(rows).join('text').attr('class', 'val')
-    .attr('y', d => y(d[labelField]) + y.bandwidth() / 2 + 4)
-    .attr('x', d => x(+d[valField]) + 6)
-    .style('font-size', '12px').style('fill', '#777')
-    .text(d => fmt(+d[valField]));
-}
-
-function lineChart(el, rows) {
-  el.innerHTML = '';
-  if (!rows.length) return emptyMsg(el, 'No data for this selection.');
-  const width = el.clientWidth || 600, height = el.clientHeight || 260;
-  const margin = { top: 10, right: 20, bottom: 40, left: 70 };
-  const parse = d3.utcParse('%Y-%m');
-  const x = d3.scaleUtc().domain(d3.extent(rows, d => parse(d.order_month))).range([margin.left, width - margin.right]);
-  const y = d3.scaleLinear().domain([0, d3.max(rows, d => +d.revenue_usd)]).nice().range([height - margin.bottom, margin.top]);
-  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height)
-    .attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img').attr('aria-label', 'Line chart of monthly revenue');
-
-  svg.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(5)).join('line')
-    .attr('x1', margin.left).attr('x2', width - margin.right).attr('y1', d => y(d)).attr('y2', d => y(d));
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(x).ticks(6).tickFormat(d3.utcFormat('%b')));
-  svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`)
-    .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('~s')));
-
-  const line = d3.line().x(d => x(parse(d.order_month))).y(d => y(+d.revenue_usd));
-  svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', accent).attr('stroke-width', 2).attr('d', line);
-
-  const tooltip = tooltipFor(el);
-  svg.selectAll('circle').data(rows).join('circle')
-    .attr('cx', d => x(parse(d.order_month))).attr('cy', d => y(+d.revenue_usd)).attr('r', 4).attr('fill', accent)
-    .on('mousemove', (ev, d) => {
-      tooltip.style.opacity = 1;
-      tooltip.textContent = `${d.order_month}: ${fmtUSD(+d.revenue_usd)} (${fmtNum(+d.orders)} orders)`;
-      const rect = el.getBoundingClientRect();
-      tooltip.style.left = (ev.clientX - rect.left + 10) + 'px';
-      tooltip.style.top = (ev.clientY - rect.top - 10) + 'px';
-    })
-    .on('mouseleave', () => tooltip.style.opacity = 0);
-}
-
-function rollupSum(rows, keyField, valueFields) {
-  const groups = d3.rollup(rows, vs => {
-    const out = { [keyField]: vs[0][keyField] };
-    valueFields.forEach(f => out[f] = d3.sum(vs, v => +v[f]));
-    return out;
-  }, d => d[keyField]);
-  return Array.from(groups.values());
-}
-
-Promise.all([
-  d3.csv('./data/revenue_by_country.csv', d3.autoType),
-  d3.csv('./data/monthly_by_country.csv', d => ({ country: d.country, order_month: d.order_month, orders: +d.orders, revenue_usd: +d.revenue_usd })),
-  d3.csv('./data/category_by_country.csv', d3.autoType),
-  d3.csv('./data/delivery_performance.csv', d3.autoType),
-  d3.csv('./data/payment_by_country.csv', d3.autoType),
-  d3.csv('./data/repeat_rate.csv', d3.autoType),
-  d3.csv('./data/repeat_rate_by_country.csv', d3.autoType),
-]).then(([byCountry, monthlyByCountry, categoryByCountry, delivery, paymentByCountry, repeatAll, repeatByCountry]) => {
-
-  const countries = byCountry.map(d => d.country).sort();
-  const sel = document.getElementById('country-filter');
-  countries.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    sel.appendChild(opt);
-  });
-
-  function render(country) {
-    const isAll = country === 'All';
-
-    // ---- KPI tiles + headline ----
-    let revenue, orders, aov, repeatPct, headline;
-    if (isAll) {
-      revenue = d3.sum(byCountry, d => d.total_revenue_usd);
-      orders = d3.sum(byCountry, d => d.total_orders);
-      aov = revenue / orders;
-      repeatPct = repeatAll[0].repeat_rate_pct;
-      const top = byCountry.slice().sort((a, b) => b.total_revenue_usd - a.total_revenue_usd)[0];
-      headline = `${top.country} leads with ${fmtUSD(top.total_revenue_usd)} in revenue across ${fmtNum(orders)} orders in 2025.`;
-    } else {
-      const row = byCountry.find(d => d.country === country);
-      revenue = row.total_revenue_usd; orders = row.total_orders; aov = row.avg_order_value_usd;
-      const rpt = repeatByCountry.find(d => d.country === country);
-      repeatPct = rpt ? rpt.repeat_rate_pct : null;
-      headline = `${country}: ${fmtUSD(revenue)} in revenue across ${fmtNum(orders)} orders in 2025.`;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pan-African E-Commerce Performance Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    :root {
+      --fg: #1a1a1a;
+      --fg-muted: #6b6b6b;
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --border: #e3e2de;
+      --accent: #c15f3c;
+      --muted-bar: #d8c3ba;
+      --ok: #2f7a4f;
     }
-    document.getElementById('headline').textContent = headline;
-    document.getElementById('kpi-revenue').textContent = fmtUSD(revenue);
-    document.getElementById('kpi-orders').textContent = fmtNum(orders);
-    document.getElementById('kpi-aov').textContent = fmtUSD(aov);
-    document.getElementById('kpi-repeat').textContent = repeatPct != null ? repeatPct.toFixed(1) + '%' : '—';
 
-    // ---- Monthly trend (filtered or summed across countries) ----
-    const monthlyRows = isAll
-      ? rollupSum(monthlyByCountry, 'order_month', ['orders', 'revenue_usd']).sort((a, b) => a.order_month.localeCompare(b.order_month))
-      : monthlyByCountry.filter(d => d.country === country).sort((a, b) => a.order_month.localeCompare(b.order_month));
-    lineChart(document.getElementById('chart-trend'), monthlyRows);
+    * {
+      box-sizing: border-box;
+    }
 
-    // ---- Revenue by country (always shows all countries; highlights selection) ----
-    barChart(document.getElementById('chart-country'),
-      byCountry.slice().sort((a, b) => b.total_revenue_usd - a.total_revenue_usd),
-      'country', 'total_revenue_usd', fmtUSD,
-      d => (isAll || d.country === country) ? accent : mutedBar);
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-    // ---- Category revenue (filtered or summed) ----
-    const categoryRows = isAll
-      ? rollupSum(categoryByCountry, 'category', ['orders', 'revenue_usd']).sort((a, b) => b.revenue_usd - a.revenue_usd)
-      : categoryByCountry.filter(d => d.country === country).sort((a, b) => b.revenue_usd - a.revenue_usd);
-    hBarChart(document.getElementById('chart-category'), categoryRows, 'category', 'revenue_usd', fmtUSD);
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
 
-    // ---- Payment mix (filtered or summed; % recomputed within scope) ----
-    const paymentRaw = isAll
-      ? rollupSum(paymentByCountry, 'payment_method', ['orders'])
-      : paymentByCountry.filter(d => d.country === country);
-    const paymentTotal = d3.sum(paymentRaw, d => d.orders);
-    const paymentRows = paymentRaw.map(d => ({ payment_method: d.payment_method, pct_of_orders: 100 * d.orders / paymentTotal }))
-      .sort((a, b) => b.pct_of_orders - a.pct_of_orders);
-    hBarChart(document.getElementById('chart-payment'), paymentRows, 'payment_method', 'pct_of_orders', v => v.toFixed(1) + '%');
+    h1 {
+      font-weight: 600;
+      font-size: 28px;
+      margin: 0 0 6px;
+    }
 
-    // ---- Delivery table (always shows all countries; highlights selection) ----
-    const tbody = document.getElementById('table-delivery');
-    tbody.innerHTML = '';
-    delivery.slice().sort((a, b) => b.pct_cancelled - a.pct_cancelled).forEach(d => {
-      const tr = document.createElement('tr');
-      if (!isAll && d.country === country) tr.className = 'selected-row';
-      [d.country, fmtNum(d.total_orders), d.avg_delivery_days.toFixed(1),
-       d.pct_late.toFixed(1) + '%', d.pct_cancelled.toFixed(1) + '%', d.pct_returned.toFixed(1) + '%']
-        .forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
-      tbody.appendChild(tr);
+    .sub {
+      color: var(--fg-muted);
+      font-size: 15px;
+      margin: 0 0 20px;
+    }
+
+    .links {
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 16px;
+    }
+
+    .links a:hover {
+      text-decoration: underline;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 26px;
+    }
+
+    .filter-row label {
+      font-size: 13.5px;
+      color: var(--fg-muted);
+    }
+
+    select#country-filter {
+      font-size: 14px;
+      padding: 7px 30px 7px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--fg);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236b6b6b'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    select#country-filter:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .card .label {
+      font-size: 12.5px;
+      color: var(--fg-muted);
+      margin-bottom: 6px;
+    }
+
+    .card .value {
+      font-size: 26px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .section-title {
+      font-size: 19px;
+      font-weight: 600;
+      margin: 30px 0 12px;
+    }
+
+    .chart-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .chart-card h3 {
+      font-size: 14.5px;
+      font-weight: 600;
+      margin: 0 0 12px;
+      color: #333;
+    }
+
+    .chart-box {
+      width: 100%;
+    }
+
+    .chart-empty {
+      color: var(--fg-muted);
+      font-size: 13.5px;
+      padding: 20px 0;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #222;
+      color: #fff;
+      font-size: 12.5px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .1s;
+      z-index: 10;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    th {
+      color: var(--fg-muted);
+      font-weight: 600;
+      font-size: 12.5px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    tr.selected-row td {
+      background: #fbf1ec;
+      font-weight: 600;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .axis text {
+      fill: var(--fg-muted);
+      font-size: 11.5px;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: #ccc;
+    }
+
+    .grid line {
+      stroke: #ececea;
+    }
+
+    .note {
+      color: var(--fg-muted);
+      font-size: 13px;
+      margin-top: 30px;
+      line-height: 1.5;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Pan-African E-Commerce Performance</h1>
+    <p class="sub" id="headline">Loading…</p>
+    <div class="links">
+      <a href="https://github.com/alamineee18/pan-african-ecommerce-analysis" target="_blank">GitHub repo (SQL + Python)
+      </a>
+    </div>
+    <div class="filter-row">
+      <label for="country-filter">Country</label>
+      <select id="country-filter">
+        <option value="All">All countries</option>
+      </select>
+    </div>
+
+    <div class="tiles">
+      <div class="card">
+        <div class="label">Total revenue</div>
+        <div class="value" id="kpi-revenue">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Total orders</div>
+        <div class="value" id="kpi-orders">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Avg order value</div>
+        <div class="value" id="kpi-aov">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Repeat purchase rate</div>
+        <div class="value" id="kpi-repeat">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">Monthly revenue trend — 2025</div>
+    <div class="chart-card">
+      <h3>Revenue by month (USD)</h3>
+      <div class="chart-box" id="chart-trend" style="height:260px"></div>
+    </div>
+
+    <div class="section-title">Where the revenue comes from</div>
+    <div class="chart-card">
+      <h3>Revenue by country (USD)</h3>
+      <div class="chart-box" id="chart-country" style="height:260px"></div>
+    </div>
+    <div class="chart-card">
+      <h3>Revenue by category (USD)</h3>
+      <div class="chart-box" id="chart-category" style="height:280px"></div>
+    </div>
+
+    <div class="section-title">Operations</div>
+    <div class="chart-card">
+      <h3>Delivery performance by country</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th>Orders</th>
+              <th>Avg delivery (days)</th>
+              <th>% late</th>
+              <th>% cancelled</th>
+              <th>% returned</th>
+            </tr>
+          </thead>
+          <tbody id="table-delivery"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Payment method mix (% of orders)</h3>
+      <div class="chart-box" id="chart-payment" style="height:220px"></div>
+    </div>
+
+    <p class="note">
+      This dashboard runs on a simulated dataset (18,180 synthetic orders modeled on reported pan-African
+      e-commerce patterns — country mix, category mix, payment mix — see the
+      <a href="https://github.com/alamineee18/pan-african-ecommerce-analysis" target="_blank">GitHub repo</a>
+      for the full data-generation and cleaning methodology). It is not real transactional data from any company.
+      Built as a data-analyst portfolio project demonstrating SQL, Python, and dashboard/BI skills.
+    </p>
+  </div>
+
+  <script>
+    const fmtUSD = n => '$' + d3.format(',.0f')(n);
+    const fmtNum = n => d3.format(',')(Math.round(n));
+    const accent = '#c15f3c';
+    const mutedBar = '#d8c3ba';
+
+    function tooltipFor(container) {
+      const tt = document.createElement('div');
+      tt.className = 'tooltip';
+      container.style.position = 'relative';
+      container.appendChild(tt);
+      return tt;
+    }
+
+    function emptyMsg(el, msg) {
+      el.innerHTML = `<div class="chart-empty">${msg}</div>`;
+    }
+
+    // Vertical bar chart. `colorFn(d)` lets callers highlight one bar (e.g. the
+    // selected country) while the rest stay muted.
+    function barChart(el, rows, xField, yField, fmt, colorFn) {
+      el.innerHTML = '';
+      if (!rows.length) return emptyMsg(el, 'No data for this selection.');
+      const width = el.clientWidth || 600, height = el.clientHeight || 260;
+      const margin = { top: 10, right: 10, bottom: 50, left: 60 };
+      const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height)
+        .attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img')
+        .attr('aria-label', `Bar chart of ${yField} by ${xField}`);
+      const x = d3.scaleBand().domain(rows.map(d => d[xField])).range([margin.left, width - margin.right]).padding(0.3);
+      const y = d3.scaleLinear().domain([0, d3.max(rows, d => +d[yField])]).nice().range([height - margin.bottom, margin.top]);
+
+      svg.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(5)).join('line')
+        .attr('x1', margin.left).attr('x2', width - margin.right).attr('y1', d => y(d)).attr('y2', d => y(d));
+      svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0));
+      svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('~s')));
+
+      const tooltip = tooltipFor(el);
+      svg.selectAll('rect').data(rows).join('rect')
+        .attr('x', d => x(d[xField])).attr('y', d => y(+d[yField]))
+        .attr('width', x.bandwidth()).attr('height', d => y(0) - y(+d[yField]))
+        .attr('fill', d => colorFn ? colorFn(d) : accent)
+        .on('mousemove', (ev, d) => {
+          tooltip.style.opacity = 1;
+          tooltip.textContent = `${d[xField]}: ${fmt(+d[yField])}`;
+          const rect = el.getBoundingClientRect();
+          tooltip.style.left = (ev.clientX - rect.left + 10) + 'px';
+          tooltip.style.top = (ev.clientY - rect.top - 10) + 'px';
+        })
+        .on('mouseleave', () => tooltip.style.opacity = 0);
+    }
+
+    function hBarChart(el, rows, labelField, valField, fmt) {
+      el.innerHTML = '';
+      if (!rows.length) return emptyMsg(el, 'No data for this selection.');
+      const width = el.clientWidth || 600, rowH = 32;
+      const margin = { top: 10, right: 50, bottom: 10, left: 150 };
+      const height = rows.length * rowH + margin.top + margin.bottom;
+      const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height)
+        .attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img')
+        .attr('aria-label', `Bar chart of ${valField} by ${labelField}`);
+      const y = d3.scaleBand().domain(rows.map(d => d[labelField])).range([margin.top, height - margin.bottom]).padding(0.25);
+      const x = d3.scaleLinear().domain([0, d3.max(rows, d => +d[valField])]).nice().range([margin.left, width - margin.right]);
+
+      svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).tickSizeOuter(0));
+
+      const tooltip = tooltipFor(el);
+      svg.selectAll('rect').data(rows).join('rect')
+        .attr('y', d => y(d[labelField])).attr('x', margin.left)
+        .attr('height', y.bandwidth()).attr('width', d => Math.max(0, x(+d[valField]) - margin.left))
+        .attr('fill', accent)
+        .on('mousemove', (ev, d) => {
+          tooltip.style.opacity = 1;
+          tooltip.textContent = `${d[labelField]}: ${fmt(+d[valField])}`;
+          const rect = el.getBoundingClientRect();
+          tooltip.style.left = (ev.clientX - rect.left + 10) + 'px';
+          tooltip.style.top = (ev.clientY - rect.top - 10) + 'px';
+        })
+        .on('mouseleave', () => tooltip.style.opacity = 0);
+
+      svg.selectAll('text.val').data(rows).join('text').attr('class', 'val')
+        .attr('y', d => y(d[labelField]) + y.bandwidth() / 2 + 4)
+        .attr('x', d => x(+d[valField]) + 6)
+        .style('font-size', '12px').style('fill', '#777')
+        .text(d => fmt(+d[valField]));
+    }
+
+    function lineChart(el, rows) {
+      el.innerHTML = '';
+      if (!rows.length) return emptyMsg(el, 'No data for this selection.');
+      const width = el.clientWidth || 600, height = el.clientHeight || 260;
+      const margin = { top: 10, right: 20, bottom: 40, left: 70 };
+      const parse = d3.utcParse('%Y-%m');
+      const x = d3.scaleUtc().domain(d3.extent(rows, d => parse(d.order_month))).range([margin.left, width - margin.right]);
+      const y = d3.scaleLinear().domain([0, d3.max(rows, d => +d.revenue_usd)]).nice().range([height - margin.bottom, margin.top]);
+      const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', height)
+        .attr('viewBox', `0 0 ${width} ${height}`).attr('role', 'img').attr('aria-label', 'Line chart of monthly revenue');
+
+      svg.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(5)).join('line')
+        .attr('x1', margin.left).attr('x2', width - margin.right).attr('y1', d => y(d)).attr('y2', d => y(d));
+      svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(6).tickFormat(d3.utcFormat('%b')));
+      svg.append('g').attr('class', 'axis').attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('~s')));
+
+      const line = d3.line().x(d => x(parse(d.order_month))).y(d => y(+d.revenue_usd));
+      svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', accent).attr('stroke-width', 2).attr('d', line);
+
+      const tooltip = tooltipFor(el);
+      svg.selectAll('circle').data(rows).join('circle')
+        .attr('cx', d => x(parse(d.order_month))).attr('cy', d => y(+d.revenue_usd)).attr('r', 4).attr('fill', accent)
+        .on('mousemove', (ev, d) => {
+          tooltip.style.opacity = 1;
+          tooltip.textContent = `${d.order_month}: ${fmtUSD(+d.revenue_usd)} (${fmtNum(+d.orders)} orders)`;
+          const rect = el.getBoundingClientRect();
+          tooltip.style.left = (ev.clientX - rect.left + 10) + 'px';
+          tooltip.style.top = (ev.clientY - rect.top - 10) + 'px';
+        })
+        .on('mouseleave', () => tooltip.style.opacity = 0);
+    }
+
+    function rollupSum(rows, keyField, valueFields) {
+      const groups = d3.rollup(rows, vs => {
+        const out = { [keyField]: vs[0][keyField] };
+        valueFields.forEach(f => out[f] = d3.sum(vs, v => +v[f]));
+        return out;
+      }, d => d[keyField]);
+      return Array.from(groups.values());
+    }
+
+    Promise.all([
+      d3.csv('./data/revenue_by_country.csv', d3.autoType),
+      d3.csv('./data/monthly_by_country.csv', d => ({ country: d.country, order_month: d.order_month, orders: +d.orders, revenue_usd: +d.revenue_usd })),
+      d3.csv('./data/category_by_country.csv', d3.autoType),
+      d3.csv('./data/delivery_performance.csv', d3.autoType),
+      d3.csv('./data/payment_by_country.csv', d3.autoType),
+      d3.csv('./data/repeat_rate.csv', d3.autoType),
+      d3.csv('./data/repeat_rate_by_country.csv', d3.autoType),
+    ]).then(([byCountry, monthlyByCountry, categoryByCountry, delivery, paymentByCountry, repeatAll, repeatByCountry]) => {
+
+      const countries = byCountry.map(d => d.country).sort();
+      const sel = document.getElementById('country-filter');
+      countries.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        sel.appendChild(opt);
+      });
+
+      function render(country) {
+        const isAll = country === 'All';
+
+        // ---- KPI tiles + headline ----
+        let revenue, orders, aov, repeatPct, headline;
+        if (isAll) {
+          revenue = d3.sum(byCountry, d => d.total_revenue_usd);
+          orders = d3.sum(byCountry, d => d.total_orders);
+          aov = revenue / orders;
+          repeatPct = repeatAll[0].repeat_rate_pct;
+          const top = byCountry.slice().sort((a, b) => b.total_revenue_usd - a.total_revenue_usd)[0];
+          headline = `${top.country} leads with ${fmtUSD(top.total_revenue_usd)} in revenue across ${fmtNum(orders)} orders in 2025.`;
+        } else {
+          const row = byCountry.find(d => d.country === country);
+          revenue = row.total_revenue_usd; orders = row.total_orders; aov = row.avg_order_value_usd;
+          const rpt = repeatByCountry.find(d => d.country === country);
+          repeatPct = rpt ? rpt.repeat_rate_pct : null;
+          headline = `${country}: ${fmtUSD(revenue)} in revenue across ${fmtNum(orders)} orders in 2025.`;
+        }
+        document.getElementById('headline').textContent = headline;
+        document.getElementById('kpi-revenue').textContent = fmtUSD(revenue);
+        document.getElementById('kpi-orders').textContent = fmtNum(orders);
+        document.getElementById('kpi-aov').textContent = fmtUSD(aov);
+        document.getElementById('kpi-repeat').textContent = repeatPct != null ? repeatPct.toFixed(1) + '%' : '—';
+
+        // ---- Monthly trend (filtered or summed across countries) ----
+        const monthlyRows = isAll
+          ? rollupSum(monthlyByCountry, 'order_month', ['orders', 'revenue_usd']).sort((a, b) => a.order_month.localeCompare(b.order_month))
+          : monthlyByCountry.filter(d => d.country === country).sort((a, b) => a.order_month.localeCompare(b.order_month));
+        lineChart(document.getElementById('chart-trend'), monthlyRows);
+
+        // ---- Revenue by country (always shows all countries; highlights selection) ----
+        barChart(document.getElementById('chart-country'),
+          byCountry.slice().sort((a, b) => b.total_revenue_usd - a.total_revenue_usd),
+          'country', 'total_revenue_usd', fmtUSD,
+          d => (isAll || d.country === country) ? accent : mutedBar);
+
+        // ---- Category revenue (filtered or summed) ----
+        const categoryRows = isAll
+          ? rollupSum(categoryByCountry, 'category', ['orders', 'revenue_usd']).sort((a, b) => b.revenue_usd - a.revenue_usd)
+          : categoryByCountry.filter(d => d.country === country).sort((a, b) => b.revenue_usd - a.revenue_usd);
+        hBarChart(document.getElementById('chart-category'), categoryRows, 'category', 'revenue_usd', fmtUSD);
+
+        // ---- Payment mix (filtered or summed; % recomputed within scope) ----
+        const paymentRaw = isAll
+          ? rollupSum(paymentByCountry, 'payment_method', ['orders'])
+          : paymentByCountry.filter(d => d.country === country);
+        const paymentTotal = d3.sum(paymentRaw, d => d.orders);
+        const paymentRows = paymentRaw.map(d => ({ payment_method: d.payment_method, pct_of_orders: 100 * d.orders / paymentTotal }))
+          .sort((a, b) => b.pct_of_orders - a.pct_of_orders);
+        hBarChart(document.getElementById('chart-payment'), paymentRows, 'payment_method', 'pct_of_orders', v => v.toFixed(1) + '%');
+
+        // ---- Delivery table (always shows all countries; highlights selection) ----
+        const tbody = document.getElementById('table-delivery');
+        tbody.innerHTML = '';
+        delivery.slice().sort((a, b) => b.pct_cancelled - a.pct_cancelled).forEach(d => {
+          const tr = document.createElement('tr');
+          if (!isAll && d.country === country) tr.className = 'selected-row';
+          [d.country, fmtNum(d.total_orders), d.avg_delivery_days.toFixed(1),
+          d.pct_late.toFixed(1) + '%', d.pct_cancelled.toFixed(1) + '%', d.pct_returned.toFixed(1) + '%']
+            .forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+          tbody.appendChild(tr);
+        });
+      }
+
+      render('All');
+      sel.addEventListener('change', () => render(sel.value));
+      window.addEventListener('resize', () => render(sel.value));
+
+    }).catch(err => {
+      document.getElementById('headline').textContent = 'Could not load data: ' + err.message;
     });
-  }
-
-  render('All');
-  sel.addEventListener('change', () => render(sel.value));
-  window.addEventListener('resize', () => render(sel.value));
-
-}).catch(err => {
-  document.getElementById('headline').textContent = 'Could not load data: ' + err.message;
-});
-</script>
+  </script>
 </body>
+
 </html>
