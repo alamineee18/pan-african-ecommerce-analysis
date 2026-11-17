@@ -208,7 +208,7 @@ function lineChart(el, rows) {
 
 Promise.all([
   d3.csv('./data/revenue_by_country.csv', d3.autoType),
-  d3.csv('./data/monthly_trend.csv', d3.autoType),
+  d3.csv('./data/monthly_trend.csv', d => ({ order_month: d.order_month, orders: +d.orders, revenue_usd: +d.revenue_usd })),
   d3.csv('./data/category_revenue.csv', d3.autoType),
   d3.csv('./data/delivery_performance.csv', d3.autoType),
   d3.csv('./data/payment_mix.csv', d3.autoType),
