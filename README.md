@@ -5,7 +5,7 @@ SQL analysis → interactive dashboard. Built to demonstrate the exact stack mos
 entry-level data-analyst postings in the African market ask for — **SQL, Python
 (pandas), and BI/dashboarding** — end to end on one dataset.
 
-**Live dashboard:** https://claude.ai/artifact/8C8JVcfQiBTRWaNAVzrAwh
+**Live dashboard:** https://alamineee18.github.io/pan-african-ecommerce-analysis/
 
 ## About the data
 
